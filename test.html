@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Feedback App</title>
+  <style>
+body {
+  font-family: Arial, sans-serif;
+  background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+  color: #f0f0f0;
+  margin: 0;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-height: 100vh;
+}
+
+    
+    h1 {
+      margin-bottom: 20px;
+    }
+
+form {
+  background: #1e1e1e;
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+  width: 350px;
+}
+
+#reviews {
+  max-width: 600px;
+  width: 100%;
+}
+
+    input, textarea, select {
+      width: 95%;
+      margin: 8px 0;
+      padding: 10px;
+      border: none;
+      border-radius: 6px;
+      background: #2c2c2c;
+      color: white;
+    }
+
+    #submitBtn {
+      width: 100%;
+      padding: 12px;
+      margin-top: 10px;
+      border: none;
+      border-radius: 8px;
+      background: linear-gradient(45deg, #00c6ff, #0072ff);
+      color: white;
+      font-size: 16px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    #submitBtn.loading {
+      background: linear-gradient(45deg, #ff9966, #ff5e62);
+      cursor: wait;
+    }
+
+    #submitBtn.sent {
+      background: linear-gradient(45deg, #56ab2f, #a8e063);
+      cursor: default;
+    }
+
+    .review-card {
+      background: #1c1c1c;
+      margin: 10px 0;
+      padding: 15px;
+      border-radius: 10px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+    }
+
+    .review-card strong {
+      font-size: 18px;
+      color: #00c6ff;
+    }
+
+    .review-card small {
+      display: block;
+      margin-bottom: 8px;
+      color: #aaa;
+    }
+  </style>
+</head>
+<body>
+<h1>Feedback Collector</h1>
+
+<div class="container">
+  <form id="reviewForm">
+    <input type="text" id="name" placeholder="Your Name" required>
+    <select id="rating" required>
+      <option value="" disabled selected>Rating</option>
+      <option value="1">⭐</option>
+      <option value="2">⭐⭐</option>
+      <option value="3">⭐⭐⭐</option>
+      <option value="4">⭐⭐⭐⭐</option>
+      <option value="5">⭐⭐⭐⭐⭐</option>
+    </select>
+    <textarea id="review" placeholder="Write your review..." required></textarea>
+    <button id="submitBtn" type="submit">Send</button>
+  </form>
+
+  <div id="reviews">
+    <!-- Review cards will be injected here -->
+  </div>
+</div>
+  <script>
+    const API_URL = "https://script.google.com/macros/s/AKfycbzTCkwhZeep4h5jA7035ZtPZGW1vLc8zo0vt4qsF6QxCZ-t5SNbo-yGcGj0wzjPyfIOtA/exec"; // Replace with your deployed Apps Script URL
+
+    async function loadReviews() {
+      const res = await fetch(API_URL);
+      const reviews = await res.json();
+      document.getElementById("reviews").innerHTML = reviews.map(r => `
+        <div class="review-card">
+          <strong>${r.name}</strong> ⭐ ${"★".repeat(r.rating)}<br>
+          <small>${new Date(r.date).toLocaleDateString()}</small>
+          <p>${r.review}</p>
+        </div>
+      `).join("");
+    }
+
+    document.getElementById("reviewForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const btn = document.getElementById("submitBtn");
+      btn.textContent = "Sending...";
+      btn.classList.add("loading");
+      btn.disabled = true;
+
+      const data = {
+        name: document.getElementById("name").value,
+        rating: document.getElementById("rating").value,
+        review: document.getElementById("review").value
+      };
+
+      await fetch(API_URL, {
+        method: "POST",
+        body: JSON.stringify(data)
+      });
+
+      btn.textContent = "Sent!";
+      btn.classList.remove("loading");
+      btn.classList.add("sent");
+
+      setTimeout(() => {
+        btn.textContent = "Send";
+        btn.classList.remove("sent");
+        btn.disabled = false;
+      }, 2000);
+
+      e.target.reset();
+      loadReviews();
+    });
+
+    loadReviews();
+  </script>
+</body>
+</html>
